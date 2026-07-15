@@ -9,9 +9,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      # Adicione esta linha:
-      - ./src/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql
+      - ./src/infra/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   pgdata:
