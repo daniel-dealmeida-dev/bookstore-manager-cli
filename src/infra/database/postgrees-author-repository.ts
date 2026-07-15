@@ -1,5 +1,5 @@
 import { Author} from "../../domain/entities/book-author";
-import { AuthorRepository } from "../../domain/repositories/book-author-reository";
+import { AuthorRepository } from "../../domain/repositories/book-author-repository";
 
 
 
