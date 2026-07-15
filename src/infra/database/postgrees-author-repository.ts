@@ -1,10 +1,7 @@
-import { Author} from "../../domain/entities/book-author";
-import { AuthorRepository } from "../../domain/repositories/book-author-repository";
-import { PgConnection } from "./pg-connection";
-import { Logger } from "../logger/logger";
-
-
-
+import { Author } from "../../domain/entities/book-author.js";
+import { AuthorRepository } from "../../domain/repositories/book-author-repository.js";
+import { PgConnection } from "./pg-connection.js";
+import { Logger } from "../logger/logger.js";
 
 export class PostgresAuthorRepository implements AuthorRepository {
     constructor(private logger: Logger) {}
