@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS authors (
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
-    author_id INTEGER REFERENCES authors(id),
-    available_quantity INTEGER DEFAULT 1
+    author_id INTEGER NOT NULL REFERENCES authors(id),
+    available_quantity INTEGER DEFAULT 1 CHECK (available_quantity >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS customers (
@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS customers (
 
 CREATE TABLE IF NOT EXISTS loans (
     id SERIAL PRIMARY KEY,
-    book_id INTEGER REFERENCES books(id),
-    customer_id INTEGER REFERENCES customers(id),
+    book_id INTEGER NOT NULL REFERENCES books(id),
+    customer_id INTEGER NOT NULL REFERENCES customers(id),
     loan_date DATE DEFAULT CURRENT_DATE,
     return_date DATE
 );

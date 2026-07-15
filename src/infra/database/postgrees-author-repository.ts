@@ -5,7 +5,7 @@ import { AuthorRepository } from "../../domain/repositories/book-author-reposito
 
 export interface Logger{
     info(message: string):void;
-    erro(message:string, error: any): void;
+    error(message:string, error: any): void;
 }
 
 

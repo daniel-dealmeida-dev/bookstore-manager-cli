@@ -1,8 +1,19 @@
 {
+  "name": "bookstore-manager-cli",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx src/main/main.ts",
+    "build": "tsc",
+    "start": "node dist/main/main.js"
+  },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "pg": "^8.22.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0"
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.20.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
   }
 }
