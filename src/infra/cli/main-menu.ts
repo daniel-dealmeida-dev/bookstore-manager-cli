@@ -4,6 +4,7 @@ import { customerMenu } from './customer-menu.js';
 import { bookMenu } from './book-menu.js';
 import { loanMenu } from './loan-menu.js';
 import { returnMenu } from './return-menu.js';
+import { reportMenu } from './report-menu.js';
 
 export async function mainMenu(deps: any) {
     let running = true;
@@ -16,6 +17,7 @@ export async function mainMenu(deps: any) {
                 'Gerenciar Autores', 
                 'Gerenciar Livros', 
                 'Gerenciar Clientes', 
+                'Gerenciar Relatórios',
                 'Realizar Empréstimo', 
                 'Registrar Devolução', 
                 'Sair'
@@ -43,6 +45,10 @@ export async function mainMenu(deps: any) {
                 await returnMenu(deps.loanRepo);
                 break;
 
+            case 'Gerenciar Relatórios':
+                await reportMenu(deps.loanRepo);
+                break;
+                
             case 'Sair':
                 running = false;
                 console.log("Encerrando o sistema...");

@@ -9,7 +9,8 @@ export class PostgresCustomerRepository implements CustomerRepository {
   async save(customer: Customer): Promise<Customer> {
     const client = await PgConnection.getInstance().connect();
     try {
-      const sql = 'INSERT INTO customers (name, email) VALUES ($1, $2) RETURNING id';
+      const sql =
+        'INSERT INTO customers (name, email) VALUES ($1, $2) RETURNING id';
       const res = await client.query(sql, [customer.name, customer.email]);
       return new Customer(res.rows[0].id, customer.name, customer.email);
     } finally {
@@ -21,7 +22,7 @@ export class PostgresCustomerRepository implements CustomerRepository {
     const client = await PgConnection.getInstance().connect();
     try {
       const res = await client.query('SELECT id, name, email FROM customers');
-      return res.rows.map(r => new Customer(r.id, r.name, r.email));
+      return res.rows.map((r) => new Customer(r.id, r.name, r.email));
     } finally {
       client.release();
     }
@@ -43,8 +44,12 @@ export class PostgresCustomerRepository implements CustomerRepository {
     const client = await PgConnection.getInstance().connect();
     try {
       const sql = 'UPDATE customers SET name = $1, email = $2 WHERE id = $3';
-      const res = await client.query(sql, [customer.name, customer.email, customer.id]);
-      if (res.rowCount === 0) throw new Error("Cliente não encontrado.");
+      const res = await client.query(sql, [
+        customer.name,
+        customer.email,
+        customer.id,
+      ]);
+      if (res.rowCount === 0) throw new Error('Cliente não encontrado.');
     } finally {
       client.release();
     }

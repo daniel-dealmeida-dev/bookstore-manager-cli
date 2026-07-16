@@ -20,7 +20,12 @@ export class PostgresAuthorRepository implements AuthorRepository {
       ]);
 
       const generatedId = result.rows[0].id;
-      return new Author(generatedId, author.name, author.nationality, author.description);
+      return new Author(
+        generatedId,
+        author.name,
+        author.nationality,
+        author.description,
+      );
     } catch (error) {
       this.logger.error('Erro ao salvar no banco', error);
       throw error;
@@ -86,7 +91,8 @@ export class PostgresAuthorRepository implements AuthorRepository {
     this.logger.info(`Buscando autor pelo ID: ${id}`);
     const client = await PgConnection.getInstance().connect();
     try {
-      const query = 'SELECT id, name, nationality, description FROM authors WHERE id = $1';
+      const query =
+        'SELECT id, name, nationality, description FROM authors WHERE id = $1';
       const result = await client.query(query, [id]);
 
       if (result.rows.length === 0) return null;
