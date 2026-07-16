@@ -70,7 +70,6 @@ export async function authorMenu(
             break;
           }
 
-          // Agora o 'name' da escolha mostra o ID, e o 'value' mantém o ID para busca
           const { idConsult } = await inquirer.prompt([
             {
               type: 'select',
