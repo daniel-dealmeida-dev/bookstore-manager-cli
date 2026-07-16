@@ -21,6 +21,6 @@ CREATE TABLE IF NOT EXISTS loans (
     id SERIAL PRIMARY KEY,
     book_id INTEGER NOT NULL REFERENCES books(id),
     customer_id INTEGER NOT NULL REFERENCES customers(id),
-    loan_date DATE DEFAULT CURRENT_DATE,
-    return_date DATE
+    loan_date DATE DEFAULT CURRENT_TIMESTAMP,
+    return_date TIMESTAMP NULL
 );
