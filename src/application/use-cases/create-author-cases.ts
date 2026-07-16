@@ -4,12 +4,12 @@ import { AuthorRepository } from "../../domain/repositories/book-author-reposito
 export class CreateAuthorUseCase {
     constructor(private authorRepository: AuthorRepository) {}
 
-    async execute(id: number | null, nome: string, nacionalidade: string, description: string): Promise<Author> {
-        if (!nome || nome.trim() === '') {
+    async execute(id: number | null, name: string, nacionalidade: string, description: string): Promise<Author> {
+        if (!name || name.trim() === '') {
             throw new Error("O nome do autor é obrigatório.");
         }
 
-        const author = new Author(id, nome, nacionalidade, description);
+        const author = new Author(id, name, nacionalidade, description);
         
         return await this.authorRepository.save(author);
     }

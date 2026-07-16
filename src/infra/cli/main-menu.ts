@@ -12,7 +12,7 @@ export async function mainMenu(deps: any) {
             choices: ['Gerenciar Autores', 'Gerenciar Livros', 'Gerenciar Clientes', 'Sair']
         }]);
 
-        switch (option) {
+       switch (option) {
             case 'Gerenciar Autores':
                 await authorMenu(deps.authorRepo, deps.createAuthorUseCase);
                 break;
@@ -22,7 +22,7 @@ export async function mainMenu(deps: any) {
                 break;
 
             case 'Gerenciar Clientes':
-                console.log("Módulo de Clientes em breve...");
+                await customerMenu(deps.customerRepo, deps.createCustomerUseCase);
                 break;
 
             case 'Sair':

@@ -1,6 +1,6 @@
 export class Customer{
     constructor(
-        public readonly id: number | null,
+        public readonly id:  number | null,
         public readonly name: string,
         public readonly email: string
     ){
