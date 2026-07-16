@@ -9,6 +9,7 @@ import { reportMenu } from './report-menu.js';
 export async function mainMenu(deps: any) {
     let running = true;
     while (running) {
+        console.clear();
         const { option } = await inquirer.prompt([{
             type: 'select', 
             name: 'option',
@@ -48,7 +49,7 @@ export async function mainMenu(deps: any) {
             case 'Gerenciar Relatórios':
                 await reportMenu(deps.loanRepo);
                 break;
-                
+
             case 'Sair':
                 running = false;
                 console.log("Encerrando o sistema...");
