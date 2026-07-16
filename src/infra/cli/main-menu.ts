@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import { authorMenu } from './author-menu.js';
 import { customerMenu } from './customer-menu.js';
+import { bookMenu } from './book-menu.js';
 
 export async function mainMenu(deps: any) {
     let running = true;
@@ -18,7 +19,7 @@ export async function mainMenu(deps: any) {
                 break;
 
             case 'Gerenciar Livros':
-                console.log("Módulo de Livros em breve...");
+                await bookMenu(deps.bookRepo, deps.authorRepo);
                 break;
 
             case 'Gerenciar Clientes':
