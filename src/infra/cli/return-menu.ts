@@ -11,7 +11,7 @@ export async function returnMenu(loanRepo: any) {
 
     const { selectedLoan } = await inquirer.prompt([
         {
-            type: 'list', 
+            type: 'select', 
             name: 'selectedLoan', 
             message: 'Selecione o empréstimo para devolver:',
             choices: activeLoans.map((l: any) => ({

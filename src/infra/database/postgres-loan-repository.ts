@@ -26,6 +26,25 @@ export class PostgresLoanRepository {
     }
   }
 
+
+
+  async findActiveLoans(): Promise<any[]> {
+    const client = await PgConnection.getInstance().connect();
+    try {
+      const query = `
+        SELECT l.id, l.book_id, b.title as book_title, c.name as customer_name 
+        FROM loans l
+        JOIN books b ON l.book_id = b.id
+        JOIN customers c ON l.customer_id = c.id
+        WHERE l.return_date IS NULL
+      `;
+      const { rows } = await client.query(query);
+      return rows;
+    } finally {
+      client.release();
+    }
+  }
+
   async returnBook(loanId: number, bookId: number): Promise<void> {
     const client = await PgConnection.getInstance().connect();
     try {
