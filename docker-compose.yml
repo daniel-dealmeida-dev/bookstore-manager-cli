@@ -1,16 +1,23 @@
 services:
-  database:
-    image: postgres:18-alpine
-    container_name: bookstore_db
+  db:
+    image: postgres:16-alpine
+    container_name: bookstore-db
+    restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: bookstore
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql
-      - ./src/infra/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - bookstore-net
+
+networks:
+  bookstore-net:
+    driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:

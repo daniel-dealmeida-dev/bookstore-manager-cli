@@ -5,11 +5,11 @@ import { mainMenu } from '../infra/cli/main-menu.js';
 
 async function main() {
     const logger = new ConsoleLogger();
-    const authorRepo = new PostgresAuthorRepository(logger);
+    const authorRepo = new PostgresAuthorRepository(logger); // Instancia uma vez
     
     const deps = {
-        authorRepo: new PostgresAuthorRepository(logger),
-        createAuthorUseCase: new CreateAuthorUseCase(new PostgresAuthorRepository(logger))
+        authorRepo: authorRepo,
+        createAuthorUseCase: new CreateAuthorUseCase(authorRepo) // Passa a instância existente
     };
 
     await mainMenu(deps);

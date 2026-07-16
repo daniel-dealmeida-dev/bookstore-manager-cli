@@ -1,15 +1,18 @@
+
 CREATE TABLE IF NOT EXISTS authors (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    nationality VARCHAR(50)
+    nationality VARCHAR(50),
+    description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
-    author_id INTEGER NOT NULL REFERENCES authors(id),
+    author_id INTEGER NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
     available_quantity INTEGER DEFAULT 1 CHECK (available_quantity >= 0)
 );
+
 
 CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
