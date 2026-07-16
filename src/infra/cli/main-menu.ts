@@ -14,7 +14,6 @@ export async function mainMenu(deps: any) {
 
         switch (option) {
             case 'Gerenciar Autores':
-                // Certifique-se de que o objeto 'deps' possui as propriedades corretas
                 await authorMenu(deps.authorRepo, deps.createAuthorUseCase);
                 break;
 
@@ -23,7 +22,6 @@ export async function mainMenu(deps: any) {
                 break;
 
             case 'Gerenciar Clientes':
-                // await customerMenu(deps.customerRepo, deps.createCustomerUseCase);
                 console.log("Módulo de Clientes em breve...");
                 break;
 

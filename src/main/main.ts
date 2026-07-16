@@ -5,7 +5,7 @@ import { mainMenu } from '../infra/cli/main-menu.js';
 
 async function main() {
     const logger = new ConsoleLogger();
-    const authorRepo = new PostgresAuthorRepository(logger); // Instancia uma vez
+    const authorRepo = new PostgresAuthorRepository(logger);
     
     const deps = {
         authorRepo: authorRepo,
