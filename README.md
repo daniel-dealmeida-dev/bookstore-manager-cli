@@ -20,8 +20,7 @@ Aplicação de linha de comando (CLI) para gerenciamento de bibliotecas, desenvo
 12. [Exemplos de Utilização](#12-exemplos-de-utilização)
 13. [Dificuldades Encontradas](#13-dificuldades-encontradas)
 14. [Futuras Implementações](#14-futuras-implementações)
-15. [Integrantes da Equipe](#15-integrantes-da-equipe)
-16. [Link do Kanban](#16-link-do-kanban)
+15. [Link do Kanban](#16-link-do-kanban)
 
 ---
 
@@ -268,6 +267,6 @@ Ao iniciar a aplicação, o menu principal é apresentado:
 
 
 
-## 16. Link do Kanban
+## 15. Link do Kanban
 
 - [\[Link do Trello\]](https://trello.com/b/LnqQ2y80/biblioteca-cli)
