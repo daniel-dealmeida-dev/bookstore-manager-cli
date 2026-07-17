@@ -8,7 +8,6 @@ export class PostgresAuthorRepository implements AuthorRepository {
 
   async save(author: Author): Promise<Author> {
     this.logger.info(`Salvando autor: ${author.name}`);
-
     const client = await PgConnection.getInstance().connect();
     try {
       const query =
@@ -18,14 +17,12 @@ export class PostgresAuthorRepository implements AuthorRepository {
         author.nationality,
         author.description,
       ]);
-
-      const generatedId = result.rows[0].id;
-      return new Author(
-        generatedId,
-        author.name,
-        author.nationality,
-        author.description,
-      );
+      return new Author({
+        id: result.rows[0].id,
+        name: author.name,
+        nationality: author.nationality,
+        description: author.description,
+      });
     } catch (error) {
       this.logger.error('Erro ao salvar no banco', error);
       throw error;
@@ -36,14 +33,19 @@ export class PostgresAuthorRepository implements AuthorRepository {
 
   async findAll(): Promise<Author[]> {
     this.logger.info('Buscando todos os autores');
-
     const client = await PgConnection.getInstance().connect();
     try {
-      const query = 'SELECT id, name, nationality, description FROM authors';
-      const result = await client.query(query);
-
+      const result = await client.query(
+        'SELECT id, name, nationality, description FROM authors WHERE is_active = true',
+      );
       return result.rows.map(
-        (row) => new Author(row.id, row.name, row.nationality, row.description),
+        (row) =>
+          new Author({
+            id: row.id,
+            name: row.name,
+            nationality: row.nationality,
+            description: row.description,
+          }),
       );
     } catch (error) {
       this.logger.error('Erro ao buscar autores', error);
@@ -57,27 +59,20 @@ export class PostgresAuthorRepository implements AuthorRepository {
     this.logger.info(`Consultando autor detalhado: ${id}`);
     const client = await PgConnection.getInstance().connect();
     try {
-      const query = `
-        SELECT a.id, a.name, a.nationality, a.description, b.id as book_id, b.title 
-        FROM authors a 
-        LEFT JOIN books b ON a.id = b.author_id 
-        WHERE a.id = $1`;
+      const query = `SELECT a.id, a.name, a.nationality, a.description, b.id as book_id, b.title 
+                     FROM authors a LEFT JOIN books b ON a.id = b.author_id WHERE a.id = $1 AND a.is_active = true`;
       const result = await client.query(query, [id]);
-
       if (result.rows.length === 0) return null;
 
-      const row = result.rows[0];
-      const author = new Author(
-        row.id,
-        row.name,
-        row.nationality,
-        row.description,
-      );
-
+      const author = new Author({
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        nationality: result.rows[0].nationality,
+        description: result.rows[0].description,
+      });
       result.rows.forEach((r) => {
         if (r.book_id) author.addBook({ id: r.book_id, title: r.title });
       });
-
       return author;
     } catch (error) {
       this.logger.error(`Erro ao consultar autor ${id}`, error);
@@ -88,17 +83,19 @@ export class PostgresAuthorRepository implements AuthorRepository {
   }
 
   async findById(id: number | string): Promise<Author | null> {
-    this.logger.info(`Buscando autor pelo ID: ${id}`);
     const client = await PgConnection.getInstance().connect();
     try {
-      const query =
-        'SELECT id, name, nationality, description FROM authors WHERE id = $1';
-      const result = await client.query(query, [id]);
-
+      const result = await client.query(
+        'SELECT id, name, nationality, description FROM authors WHERE id = $1 AND is_active = true',
+        [id],
+      );
       if (result.rows.length === 0) return null;
-
-      const row = result.rows[0];
-      return new Author(row.id, row.name, row.nationality, row.description);
+      return new Author({
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        nationality: result.rows[0].nationality,
+        description: result.rows[0].description,
+      });
     } catch (error) {
       this.logger.error(`Erro ao buscar autor com ID ${id}`, error);
       throw error;
@@ -108,19 +105,13 @@ export class PostgresAuthorRepository implements AuthorRepository {
   }
 
   async update(author: Author): Promise<void> {
-    this.logger.info(`Atualizando autor: ${author.id}`);
     const client = await PgConnection.getInstance().connect();
     try {
-      const query =
-        'UPDATE authors SET name = $1, nationality = $2, description = $3 WHERE id = $4';
-      await client.query(query, [
-        author.name,
-        author.nationality,
-        author.description,
-        author.id,
-      ]);
+      await client.query(
+        'UPDATE authors SET name = $1, nationality = $2, description = $3 WHERE id = $4',
+        [author.name, author.nationality, author.description, author.id],
+      );
     } catch (error) {
-      this.logger.error(`Erro ao atualizar autor ${author.id}`, error);
       throw error;
     } finally {
       client.release();
@@ -128,14 +119,11 @@ export class PostgresAuthorRepository implements AuthorRepository {
   }
 
   async delete(id: string): Promise<void> {
-    this.logger.info(`Removendo autor: ${id}`);
     const client = await PgConnection.getInstance().connect();
     try {
-      const query = 'DELETE FROM authors WHERE id = $1';
-      await client.query(query, [id]);
-    } catch (error) {
-      this.logger.error(`Erro ao remover autor ${id}`, error);
-      throw error;
+      await client.query('UPDATE authors SET is_active = false WHERE id = $1', [
+        id,
+      ]);
     } finally {
       client.release();
     }

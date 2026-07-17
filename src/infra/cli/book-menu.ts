@@ -47,7 +47,14 @@ export async function bookMenu(
             { type: 'number', name: 'qty', message: 'Quantidade disponível:' },
           ]);
 
-          await repo.save(data.title, data.authorId, data.qty);
+          await repo.save(
+            new Book({
+              id: 0,
+              title: data.title,
+              authorId: data.authorId,
+              availableQuantity: data.qty,
+            }),
+          );
           console.log(chalk.green.bold('✔ Livro cadastrado com sucesso!'));
           break;
 
@@ -57,9 +64,9 @@ export async function bookMenu(
             console.log(chalk.yellow.bold('⚠️ Nenhum livro cadastrado.'));
           } else {
             console.log(chalk.blue.bold('\n--- Lista de Livros ---'));
-            list.forEach((b) => {
+            list.forEach((b: any) => {
               console.log(
-                `${chalk.yellow(`[ID: ${b.id}]`)} ${b.title} ${chalk.dim(`(Autor: ${b.author_name} | Qtd: ${b.available_quantity})`)}`,
+                `${chalk.yellow(`[ID: ${b.id}]`)} ${b.title} ${chalk.dim(`(Qtd: ${b.availableQuantity})`)}`,
               );
             });
             console.log('------------------------\n');
@@ -116,7 +123,6 @@ export async function bookMenu(
           ]);
 
           const currentBook = await repo.findById(idUp);
-
           if (!currentBook) {
             console.log(chalk.red('❌ Livro não encontrado!'));
             break;
@@ -138,14 +144,13 @@ export async function bookMenu(
           ]);
 
           await repo.update(
-            new Book(
-              idUp,
-              updateData.title,
-              currentBook.authorId,
-              updateData.qty,
-            ),
+            new Book({
+              id: idUp,
+              title: updateData.title,
+              authorId: currentBook.authorId,
+              availableQuantity: updateData.qty,
+            }),
           );
-
           console.log(chalk.green.bold('✔ Livro atualizado com sucesso!'));
           break;
 

@@ -1,11 +1,16 @@
 export class Customer {
-  constructor(
-    public readonly id: number | null,
-    public readonly name: string,
-    public readonly email: string,
-  ) {
-    if (!name || name.trim().length < 3)
+  public readonly id: number | null;
+  public readonly name: string;
+  public readonly email: string;
+
+  constructor(data: { id: number | null; name: string; email: string }) {
+    this.id = data.id;
+    this.name = data.name;
+    this.email = data.email;
+
+    if (!this.name || this.name.trim().length < 3)
       throw new Error('O nome deve ter ao menos 3 caracteres.');
-    if (!email.includes('@')) throw new Error('O e-mail informado é inválido.');
+    if (!this.email.includes('@'))
+      throw new Error('O e-mail informado é inválido.');
   }
 }

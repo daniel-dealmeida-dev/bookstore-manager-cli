@@ -1,8 +1,8 @@
 import inquirer from 'inquirer';
+import chalk from 'chalk';
 import { AuthorRepository } from '../../domain/repositories/book-author-repository.js';
 import { CreateAuthorUseCase } from '../../application/use-cases/create-author-cases.js';
 import { Author } from '../../domain/entities/book-author.js';
-import chalk from 'chalk';
 
 export async function authorMenu(
   repo: AuthorRepository,
@@ -29,22 +29,20 @@ export async function authorMenu(
 
     try {
       switch (op) {
-        case 'Cadastrar autores':
+       case 'Cadastrar autores':
           const answers = await inquirer.prompt([
             { type: 'input', name: 'name', message: 'Nome do Autor:' },
             { type: 'input', name: 'nationality', message: 'Nacionalidade:' },
-            {
-            
-              name: 'description',
-              message: 'Descrição do autor:',
-            },
+            { type: 'input', name: 'description', message: 'Descrição do autor:' },
           ]);
-          await createUseCase.execute(
-            null,
-            answers.name,
-            answers.nationality,
-            answers.description,
-          );
+
+          await createUseCase.execute({
+            id: null, 
+            name: answers.name,
+            nationality: answers.nationality,
+            description: answers.description,
+          });
+          
           console.log(chalk.green.bold('✔ Autor salvo com sucesso!'));
           break;
 
@@ -76,7 +74,7 @@ export async function authorMenu(
               name: 'idConsult',
               message: 'Selecione o ID do autor para consultar:',
               choices: autores.map((a) => ({
-                name: `ID: ${a.id}`,
+                name: `ID: ${a.id} - ${a.name}`,
                 value: a.id,
               })),
             },
@@ -104,6 +102,11 @@ export async function authorMenu(
 
         case 'Atualizar autores':
           const autoresUp = await repo.findAll();
+          if (autoresUp.length === 0) {
+            console.log(chalk.yellow.bold('⚠️ Nenhum autor para atualizar.'));
+            break;
+          }
+
           const { idUp } = await inquirer.prompt([
             {
               type: 'select',
@@ -112,28 +115,52 @@ export async function authorMenu(
               choices: autoresUp.map((a) => ({ name: a.name, value: a.id })),
             },
           ]);
+
+          const currentAuthor = await repo.findById(idUp);
+          if (!currentAuthor) {
+            console.log(chalk.red('❌ Autor não encontrado!'));
+            break;
+          }
+
           const updateData = await inquirer.prompt([
-            { type: 'input', name: 'name', message: 'Novo nome:' },
+            {
+              type: 'input',
+              name: 'name',
+              message: 'Novo nome:',
+              default: currentAuthor.name,
+            },
             {
               type: 'input',
               name: 'nationality',
               message: 'Nova nacionalidade:',
+              default: currentAuthor.nationality,
             },
-            { type: 'input', name: 'description', message: 'Nova descrição:' },
+            {
+              type: 'input',
+              name: 'description',
+              message: 'Nova descrição:',
+              default: currentAuthor.description,
+            },
           ]);
+
           await repo.update(
-            new Author(
-              idUp,
-              updateData.name,
-              updateData.nationality,
-              updateData.description,
-            ),
+            new Author({
+              id: Number(idUp),
+              name: updateData.name,
+              nationality: updateData.nationality,
+              description: updateData.description,
+            }),
           );
           console.log(chalk.green.bold('✔ Autor atualizado com sucesso!'));
           break;
 
         case 'Deletar autores':
           const autoresDel = await repo.findAll();
+          if (autoresDel.length === 0) {
+            console.log(chalk.yellow.bold('⚠️ Nenhum autor para deletar.'));
+            break;
+          }
+
           const { idDel } = await inquirer.prompt([
             {
               type: 'select',
@@ -142,6 +169,7 @@ export async function authorMenu(
               choices: autoresDel.map((a) => ({ name: a.name, value: a.id })),
             },
           ]);
+
           await repo.delete(idDel);
           console.log(chalk.red.bold('✔ Autor removido com sucesso!'));
           break;

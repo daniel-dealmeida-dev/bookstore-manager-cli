@@ -4,32 +4,39 @@ import { CustomerRepository } from '../../domain/repositories/customer-repositor
 import { CreateCustomerUseCase } from '../../application/use-cases/customer-cases.js';
 import { Customer } from '../../domain/entities/customer.js';
 
-export async function customerMenu(repo: CustomerRepository, useCase: CreateCustomerUseCase) {
+export async function customerMenu(
+  repo: CustomerRepository,
+  useCase: CreateCustomerUseCase,
+) {
   let running = true;
 
   while (running) {
-    const { op } = await inquirer.prompt([{
-      type: 'select',
-      name: 'op',
-      message: '--- BIBLIOTECA SYSTEM: Gerenciar Clientes ---',
-      choices: [
-        'Cadastrar clientes',
-        'Listar clientes',
-        'Consultar um cliente por identificador',
-        'Atualizar clientes',
-        'Deletar clientes',
-        'Voltar'
-      ],
-    }]);
+    const { op } = await inquirer.prompt([
+      {
+        type: 'select',
+        name: 'op',
+        message: '--- BIBLIOTECA SYSTEM: Gerenciar Clientes ---',
+        choices: [
+          'Cadastrar clientes',
+          'Listar clientes',
+          'Consultar um cliente por identificador',
+          'Atualizar clientes',
+          'Deletar clientes',
+          'Voltar',
+        ],
+      },
+    ]);
 
     try {
       switch (op) {
-        case 'Cadastrar clientes':
+       case 'Cadastrar clientes':
           const data = await inquirer.prompt([
             { type: 'input', name: 'name', message: 'Nome do Cliente:' },
             { type: 'input', name: 'email', message: 'E-mail:' },
           ]);
-          await useCase.execute(data.name, data.email);
+          
+          await useCase.execute({ name: data.name, email: data.email });
+          
           console.log(chalk.green.bold('✔ Cliente salvo com sucesso!'));
           break;
 
@@ -40,7 +47,9 @@ export async function customerMenu(repo: CustomerRepository, useCase: CreateCust
           } else {
             console.log(chalk.blue.bold('\n--- Lista de Clientes ---'));
             list.forEach((c) => {
-              console.log(`${chalk.yellow(`[ID: ${c.id}]`)} ${c.name} ${chalk.dim(`(${c.email})`)}`);
+              console.log(
+                `${chalk.yellow(`[ID: ${c.id}]`)} ${c.name} ${chalk.dim(`(${c.email})`)}`,
+              );
             });
             console.log('------------------------\n');
           }
@@ -53,15 +62,17 @@ export async function customerMenu(repo: CustomerRepository, useCase: CreateCust
             break;
           }
 
-          const { idConsult } = await inquirer.prompt([{
-            type: 'select',
-            name: 'idConsult',
-            message: 'Selecione o cliente para consultar:',
-            choices: customers.map((c) => ({ 
-              name: `ID: ${c.id}`, 
-              value: c.id 
-            })),
-          }]);
+          const { idConsult } = await inquirer.prompt([
+            {
+              type: 'select',
+              name: 'idConsult',
+              message: 'Selecione o cliente para consultar:',
+              choices: customers.map((c) => ({
+                name: `ID: ${c.id} - ${c.name}`,
+                value: c.id,
+              })),
+            },
+          ]);
 
           const customer = await repo.findById(idConsult);
           if (customer) {
@@ -79,22 +90,46 @@ export async function customerMenu(repo: CustomerRepository, useCase: CreateCust
             break;
           }
 
-          const { idUp } = await inquirer.prompt([{
-            type: 'select',
-            name: 'idUp',
-            message: 'Selecione o cliente para atualizar:',
-            choices: listUp.map((c) => ({ 
-              name: `${c.name} ${chalk.dim(`(ID: ${c.id})`)}`, 
-              value: c.id 
-            })),
-          }]);
-
-          const updateData = await inquirer.prompt([
-            { type: 'input', name: 'name', message: 'Novo nome:' },
-            { type: 'input', name: 'email', message: 'Novo e-mail:' },
+          const { idUp } = await inquirer.prompt([
+            {
+              type: 'select',
+              name: 'idUp',
+              message: 'Selecione o cliente para atualizar:',
+              choices: listUp.map((c) => ({
+                name: `${c.name} ${chalk.dim(`(ID: ${c.id})`)}`,
+                value: c.id,
+              })),
+            },
           ]);
 
-          await repo.update(new Customer(idUp, updateData.name, updateData.email));
+          const currentCustomer = await repo.findById(idUp);
+          if (!currentCustomer) {
+            console.log(chalk.red('❌ Cliente não encontrado!'));
+            break;
+          }
+
+          const updateData = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'name',
+              message: 'Novo nome:',
+              default: currentCustomer.name,
+            },
+            {
+              type: 'input',
+              name: 'email',
+              message: 'Novo e-mail:',
+              default: currentCustomer.email,
+            },
+          ]);
+
+          await repo.update(
+            new Customer({
+              id: Number(idUp),
+              name: updateData.name,
+              email: updateData.email,
+            }),
+          );
           console.log(chalk.green.bold('✔ Cliente atualizado com sucesso!'));
           break;
 
@@ -105,15 +140,17 @@ export async function customerMenu(repo: CustomerRepository, useCase: CreateCust
             break;
           }
 
-          const { idDel } = await inquirer.prompt([{
-            type: 'select',
-            name: 'idDel',
-            message: 'Selecione o cliente para remover:',
-            choices: listDel.map((c) => ({ 
-              name: `${c.name} ${chalk.dim(`(ID: ${c.id})`)}`, 
-              value: c.id 
-            })),
-          }]);
+          const { idDel } = await inquirer.prompt([
+            {
+              type: 'select',
+              name: 'idDel',
+              message: 'Selecione o cliente para remover:',
+              choices: listDel.map((c) => ({
+                name: `${c.name} ${chalk.dim(`(ID: ${c.id})`)}`,
+                value: c.id,
+              })),
+            },
+          ]);
 
           await repo.delete(idDel);
           console.log(chalk.red.bold('✔ Cliente removido com sucesso!'));

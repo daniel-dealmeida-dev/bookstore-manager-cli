@@ -1,25 +1,36 @@
 import { PgConnection } from './pg-connection.js';
 
 export class PostgresLoanRepository {
-  async createLoan(bookId: number, customerId: number): Promise<void> {
+  async createLoan(data: {
+    bookId: number;
+    customerId: number;
+  }): Promise<void> {
     const client = await PgConnection.getInstance().connect();
 
     try {
       await client.query('BEGIN');
 
-      await client.query(
+      const result = await client.query(
         'UPDATE books SET available_quantity = available_quantity - 1 WHERE id = $1 AND available_quantity > 0',
-        [bookId],
+        [data.bookId],
       );
+
+      if (result.rowCount === 0) {
+        throw new Error(
+          'O UPDATE falhou: Verifique se o ID existe e se a quantidade é maior que 0.',
+        );
+      }
 
       await client.query(
         'INSERT INTO loans (book_id, customer_id) VALUES ($1, $2)',
-        [bookId, customerId],
+        [data.bookId, data.customerId],
       );
 
       await client.query('COMMIT');
+      console.log('✔ Empréstimo registrado e estoque atualizado!');
     } catch (e) {
       await client.query('ROLLBACK');
+      console.error('❌ ERRO NO BANCO:', e);
       throw e;
     } finally {
       client.release();
@@ -43,16 +54,19 @@ export class PostgresLoanRepository {
     }
   }
 
-async getActiveLoansReport(): Promise<any[]> {
+  async getActiveLoansReport(): Promise<any[]> {
     const client = await PgConnection.getInstance().connect();
     try {
       const query = `
-        SELECT b.title as livro, c.name as cliente, l.loan_date as data
-        FROM loans l
-        JOIN books b ON l.book_id = b.id
-        JOIN customers c ON l.customer_id = c.id
-        WHERE l.return_date IS NULL
-      `;
+      SELECT 
+        b.title as livro, 
+        c.name as cliente, 
+        TO_CHAR(l.loan_date, 'DD/MM/YYYY') as data
+      FROM loans l
+      JOIN books b ON l.book_id = b.id
+      JOIN customers c ON l.customer_id = c.id
+      WHERE l.return_date IS NULL
+    `;
       const { rows } = await client.query(query);
       return rows;
     } finally {
@@ -77,21 +91,20 @@ async getActiveLoansReport(): Promise<any[]> {
       client.release();
     }
   }
-  async returnBook(loanId: number, bookId: number): Promise<void> {
+
+  async returnBook(data: { loanId: number; bookId: number }): Promise<void> {
+    const { loanId, bookId } = data;
     const client = await PgConnection.getInstance().connect();
     try {
       await client.query('BEGIN');
-
       await client.query(
         'UPDATE loans SET return_date = CURRENT_TIMESTAMP WHERE id = $1',
         [loanId],
       );
-
       await client.query(
         'UPDATE books SET available_quantity = available_quantity + 1 WHERE id = $1',
         [bookId],
       );
-
       await client.query('COMMIT');
     } catch (e) {
       await client.query('ROLLBACK');
