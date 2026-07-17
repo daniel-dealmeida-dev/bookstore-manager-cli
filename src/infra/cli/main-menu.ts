@@ -4,7 +4,7 @@ import { customerMenu } from './customer-menu.js';
 import { bookMenu } from './book-menu.js';
 import { loanMenu } from './loan-menu.js';
 import { returnMenu } from './return-menu.js';
-import { reportMenu } from './report-menu.js';
+import { reportMenu } from './main-report-menu.js';
 
 export async function mainMenu(deps: any) {
     let running = true;
