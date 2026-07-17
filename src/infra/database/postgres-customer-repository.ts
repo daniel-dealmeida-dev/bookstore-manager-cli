@@ -2,6 +2,7 @@ import { Customer } from '../../domain/entities/customer.js';
 import { CustomerRepository } from '../../domain/repositories/customer-repository.js';
 import { PgConnection } from './pg-connection.js';
 import { Logger } from '../logger/logger.js';
+import { DomainException, SystemException } from '../../domain/errors/index.js';
 
 export class PostgresCustomerRepository implements CustomerRepository {
   constructor(private logger: Logger) {}
@@ -12,11 +13,15 @@ export class PostgresCustomerRepository implements CustomerRepository {
       const sql =
         'INSERT INTO customers (name, email) VALUES ($1, $2) RETURNING id';
       const res = await client.query(sql, [customer.name, customer.email]);
+
       return new Customer({
         id: res.rows[0].id,
         name: customer.name,
         email: customer.email,
       });
+    } catch (e) {
+      this.logger.error('Erro ao salvar cliente', e);
+      throw SystemException.fromUnknown(e, 'DATABASE_SAVE_ERROR');
     } finally {
       client.release();
     }
@@ -25,10 +30,15 @@ export class PostgresCustomerRepository implements CustomerRepository {
   async findAll(): Promise<Customer[]> {
     const client = await PgConnection.getInstance().connect();
     try {
-      const res = await client.query('SELECT id, name, email FROM customers WHERE is_active = true');
+      const res = await client.query(
+        'SELECT id, name, email FROM customers WHERE is_active = true',
+      );
       return res.rows.map(
         (r) => new Customer({ id: r.id, name: r.name, email: r.email }),
       );
+    } catch (e) {
+      this.logger.error('Erro ao listar clientes', e);
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -42,11 +52,15 @@ export class PostgresCustomerRepository implements CustomerRepository {
         [id],
       );
       if (res.rows.length === 0) return null;
+
       return new Customer({
         id: res.rows[0].id,
         name: res.rows[0].name,
         email: res.rows[0].email,
       });
+    } catch (e) {
+      this.logger.error(`Erro ao buscar cliente ${id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -56,7 +70,19 @@ export class PostgresCustomerRepository implements CustomerRepository {
     const client = await PgConnection.getInstance().connect();
     try {
       const sql = 'UPDATE customers SET name = $1, email = $2 WHERE id = $3';
-      await client.query(sql, [customer.name, customer.email, customer.id]);
+      const res = await client.query(sql, [
+        customer.name,
+        customer.email,
+        customer.id,
+      ]);
+
+      if (res.rowCount === 0) {
+        throw new DomainException('Cliente não encontrado para atualização.');
+      }
+    } catch (e) {
+      if (e instanceof DomainException) throw e;
+      this.logger.error(`Erro ao atualizar cliente ${customer.id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_UPDATE_ERROR');
     } finally {
       client.release();
     }
@@ -65,7 +91,18 @@ export class PostgresCustomerRepository implements CustomerRepository {
   async delete(id: string): Promise<void> {
     const client = await PgConnection.getInstance().connect();
     try {
-      await client.query('UPDATE customers SET is_active = false WHERE id = $1', [id]);
+      const res = await client.query(
+        'UPDATE customers SET is_active = false WHERE id = $1',
+        [id],
+      );
+
+      if (res.rowCount === 0) {
+        throw new DomainException('Cliente não encontrado para exclusão.');
+      }
+    } catch (e) {
+      if (e instanceof DomainException) throw e;
+      this.logger.error(`Erro ao deletar cliente ${id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_DELETE_ERROR');
     } finally {
       client.release();
     }

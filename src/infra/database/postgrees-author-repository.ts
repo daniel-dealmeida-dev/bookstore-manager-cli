@@ -2,6 +2,7 @@ import { Author } from '../../domain/entities/book-author.js';
 import { AuthorRepository } from '../../domain/repositories/book-author-repository.js';
 import { PgConnection } from './pg-connection.js';
 import { Logger } from '../logger/logger.js';
+import { DomainException, SystemException } from '../../domain/errors/index.js';
 
 export class PostgresAuthorRepository implements AuthorRepository {
   constructor(private logger: Logger) {}
@@ -23,9 +24,9 @@ export class PostgresAuthorRepository implements AuthorRepository {
         nationality: author.nationality,
         description: author.description,
       });
-    } catch (error) {
-      this.logger.error('Erro ao salvar no banco', error);
-      throw error;
+    } catch (e) {
+      this.logger.error('Erro ao salvar autor no banco', e);
+      throw SystemException.fromUnknown(e, 'DATABASE_SAVE_ERROR');
     } finally {
       client.release();
     }
@@ -47,9 +48,9 @@ export class PostgresAuthorRepository implements AuthorRepository {
             description: row.description,
           }),
       );
-    } catch (error) {
-      this.logger.error('Erro ao buscar autores', error);
-      throw error;
+    } catch (e) {
+      this.logger.error('Erro ao buscar autores', e);
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -74,9 +75,9 @@ export class PostgresAuthorRepository implements AuthorRepository {
         if (r.book_id) author.addBook({ id: r.book_id, title: r.title });
       });
       return author;
-    } catch (error) {
-      this.logger.error(`Erro ao consultar autor ${id}`, error);
-      throw error;
+    } catch (e) {
+      this.logger.error(`Erro ao consultar autor ${id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -96,9 +97,9 @@ export class PostgresAuthorRepository implements AuthorRepository {
         nationality: result.rows[0].nationality,
         description: result.rows[0].description,
       });
-    } catch (error) {
-      this.logger.error(`Erro ao buscar autor com ID ${id}`, error);
-      throw error;
+    } catch (e) {
+      this.logger.error(`Erro ao buscar autor com ID ${id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -107,12 +108,20 @@ export class PostgresAuthorRepository implements AuthorRepository {
   async update(author: Author): Promise<void> {
     const client = await PgConnection.getInstance().connect();
     try {
-      await client.query(
+      const res = await client.query(
         'UPDATE authors SET name = $1, nationality = $2, description = $3 WHERE id = $4',
         [author.name, author.nationality, author.description, author.id],
       );
-    } catch (error) {
-      throw error;
+
+      if (res.rowCount === 0) {
+        throw new DomainException(
+          `Autor com ID ${author.id} não encontrado para atualização.`,
+        );
+      }
+    } catch (e) {
+      if (e instanceof DomainException) throw e;
+      this.logger.error(`Erro ao atualizar autor ${author.id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_UPDATE_ERROR');
     } finally {
       client.release();
     }
@@ -121,9 +130,20 @@ export class PostgresAuthorRepository implements AuthorRepository {
   async delete(id: string): Promise<void> {
     const client = await PgConnection.getInstance().connect();
     try {
-      await client.query('UPDATE authors SET is_active = false WHERE id = $1', [
-        id,
-      ]);
+      const res = await client.query(
+        'UPDATE authors SET is_active = false WHERE id = $1',
+        [id],
+      );
+
+      if (res.rowCount === 0) {
+        throw new DomainException(
+          `Autor com ID ${id} não encontrado para exclusão.`,
+        );
+      }
+    } catch (e) {
+      if (e instanceof DomainException) throw e;
+      this.logger.error(`Erro ao deletar autor ${id}`, e);
+      throw SystemException.fromUnknown(e, 'DATABASE_DELETE_ERROR');
     } finally {
       client.release();
     }

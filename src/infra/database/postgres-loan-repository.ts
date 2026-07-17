@@ -1,4 +1,5 @@
 import { PgConnection } from './pg-connection.js';
+import { DomainException, SystemException } from '../../domain/errors/index.js';
 
 export class PostgresLoanRepository {
   async createLoan(data: {
@@ -8,25 +9,28 @@ export class PostgresLoanRepository {
     const client = await PgConnection.getInstance().connect();
     try {
       await client.query('BEGIN');
+
       const result = await client.query(
         'UPDATE books SET available_quantity = available_quantity - 1 WHERE id = $1 AND available_quantity > 0',
         [data.bookId],
       );
+
       if (result.rowCount === 0) {
-        throw new Error(
-          'O UPDATE falhou: Verifique se o ID existe e se a quantidade é maior que 0.',
+        throw new DomainException(
+          'Não foi possível realizar o empréstimo: estoque insuficiente ou livro inexistente.',
         );
       }
+
       await client.query(
         'INSERT INTO loans (book_id, customer_id) VALUES ($1, $2)',
         [data.bookId, data.customerId],
       );
       await client.query('COMMIT');
-      console.log('✔ Empréstimo registrado e estoque atualizado!');
+      console.log('✔ Empréstimo registrado!');
     } catch (e) {
       await client.query('ROLLBACK');
-      console.error('❌ ERRO NO BANCO:', e);
-      throw e;
+      if (e instanceof DomainException) throw e;
+      throw SystemException.fromUnknown(e, 'INTERNAL_DATABASE_ERROR');
     } finally {
       client.release();
     }
@@ -35,8 +39,21 @@ export class PostgresLoanRepository {
   async returnBook(data: { loanId: number; bookId: number }): Promise<void> {
     const { loanId, bookId } = data;
     const client = await PgConnection.getInstance().connect();
+
     try {
       await client.query('BEGIN');
+
+      const loanCheck = await client.query(
+        'SELECT id, return_date FROM loans WHERE id = $1',
+        [loanId],
+      );
+      if (loanCheck.rowCount === 0) {
+        throw new DomainException('Empréstimo não encontrado.');
+      }
+      if (loanCheck.rows[0].return_date !== null) {
+        throw new DomainException('Este livro já foi devolvido anteriormente.');
+      }
+
       await client.query(
         'UPDATE loans SET return_date = CURRENT_TIMESTAMP WHERE id = $1',
         [loanId],
@@ -45,15 +62,17 @@ export class PostgresLoanRepository {
         'UPDATE books SET available_quantity = available_quantity + 1 WHERE id = $1',
         [bookId],
       );
+
       await client.query('COMMIT');
+      console.log('✔ Livro devolvido com sucesso!');
     } catch (e) {
       await client.query('ROLLBACK');
-      throw e;
+      if (e instanceof DomainException) throw e;
+      throw SystemException.fromUnknown(e, 'INTERNAL_DATABASE_ERROR');
     } finally {
       client.release();
     }
   }
-
 
   async getActiveLoansReport(): Promise<any[]> {
     const client = await PgConnection.getInstance().connect();
@@ -69,6 +88,8 @@ export class PostgresLoanRepository {
         WHERE l.return_date IS NULL`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -85,6 +106,8 @@ export class PostgresLoanRepository {
         ORDER BY "Total de Empréstimos" DESC LIMIT 5`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -97,6 +120,8 @@ export class PostgresLoanRepository {
         'SELECT title as "Título", available_quantity as "Qtd. Disponível" FROM books WHERE available_quantity > 0 AND is_active = true',
       );
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -113,6 +138,8 @@ export class PostgresLoanRepository {
         ORDER BY "Autor"`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -128,6 +155,8 @@ export class PostgresLoanRepository {
         WHERE l.return_date IS NULL`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -147,6 +176,8 @@ export class PostgresLoanRepository {
         ORDER BY l.loan_date DESC`;
       const { rows } = await client.query(query, [customerId]);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -163,6 +194,8 @@ export class PostgresLoanRepository {
         ORDER BY "Total de Livros" DESC`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
@@ -178,6 +211,8 @@ export class PostgresLoanRepository {
         WHERE l.id IS NULL AND b.is_active = true`;
       const { rows } = await client.query(query);
       return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'REPORT_QUERY_ERROR');
     } finally {
       client.release();
     }
