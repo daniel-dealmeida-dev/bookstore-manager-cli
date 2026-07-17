@@ -3,10 +3,12 @@ import chalk from 'chalk';
 import { BookRepository } from '../../domain/repositories/book-repository.js';
 import { AuthorRepository } from '../../domain/repositories/book-author-repository.js';
 import { Book } from '../../domain/entities/book.js';
+import { CreateBookUseCase } from '../../application/use-cases/book-cases.js';
 
 export async function bookMenu(
   repo: BookRepository,
   authorRepo: AuthorRepository,
+  createBookUseCase: CreateBookUseCase,
 ) {
   let running = true;
 
@@ -47,14 +49,11 @@ export async function bookMenu(
             { type: 'number', name: 'qty', message: 'Quantidade disponível:' },
           ]);
 
-          await repo.save(
-            new Book({
-              id: 0,
-              title: data.title,
-              authorId: data.authorId,
-              availableQuantity: data.qty,
-            }),
-          );
+          await createBookUseCase.execute({
+            title: data.title,
+            authorId: data.authorId,
+            quantity: data.qty,
+          });
           console.log(chalk.green.bold('✔ Livro cadastrado com sucesso!'));
           break;
 

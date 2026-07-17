@@ -1,11 +1,11 @@
-import { PostgresAuthorRepository } from '../infra/database/postgrees-author-repository.js';
+import { PostgresAuthorRepository } from '../infra/database/postgres-author-repository.js';
 import { CreateAuthorUseCase } from '../application/use-cases/create-author-cases.js';
 import { ConsoleLogger } from '../infra/logger/console-logger.js';
 import { mainMenu } from '../infra/cli/main-menu.js';
 import { PostgresCustomerRepository } from '../infra/database/postgres-customer-repository.js';
 import { CreateCustomerUseCase } from '../application/use-cases/customer-cases.js';
 import { PostgresBookRepository } from '../infra/database/postgres-book-repository.js';
-import { CreateBookUseCases } from '../application/use-cases/book-cases.js';
+import { CreateBookUseCase } from '../application/use-cases/book-cases.js';
 import { PgConnection } from '../infra/database/pg-connection.js';
 import { PostgresLoanRepository } from '../infra/database/postgres-loan-repository.js';
 import { DomainException, SystemException } from '../domain/errors/index.js';
@@ -34,7 +34,7 @@ async function main() {
     customerRepo,
     createCustomerUseCase: new CreateCustomerUseCase(customerRepo),
     bookRepo,
-    createBookUseCase: new CreateBookUseCases(bookRepo),
+    createBookUseCase: new CreateBookUseCase(bookRepo),
     loanRepo,
   };
 

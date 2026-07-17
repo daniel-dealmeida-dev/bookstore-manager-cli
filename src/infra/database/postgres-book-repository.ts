@@ -7,13 +7,19 @@ import { DomainException, SystemException } from '../../domain/errors/index.js';
 export class PostgresBookRepository implements BookRepository {
   constructor(private logger: Logger) {}
 
-  async save(book: Book): Promise<void> {
+  async save(book: Book): Promise<Book> {
     const client = await PgConnection.getInstance().connect();
     try {
-      await client.query(
-        'INSERT INTO books (title, author_id, available_quantity) VALUES ($1, $2, $3)',
+      const result = await client.query(
+        'INSERT INTO books (title, author_id, available_quantity) VALUES ($1, $2, $3) RETURNING id',
         [book.title, book.authorId, book.availableQuantity],
       );
+      return new Book({
+        id: result.rows[0].id,
+        title: book.title,
+        authorId: book.authorId,
+        availableQuantity: book.availableQuantity,
+      });
     } catch (e) {
       this.logger.error('Erro ao salvar livro', e);
       throw SystemException.fromUnknown(e, 'DATABASE_SAVE_ERROR');

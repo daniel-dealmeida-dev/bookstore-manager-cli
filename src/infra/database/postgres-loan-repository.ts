@@ -1,7 +1,8 @@
 import { PgConnection } from './pg-connection.js';
 import { DomainException, SystemException } from '../../domain/errors/index.js';
+import { LoanRepository } from '../../domain/repositories/loan-repository.js';
 
-export class PostgresLoanRepository {
+export class PostgresLoanRepository implements LoanRepository {
   async createLoan(data: {
     bookId: number;
     customerId: number;
@@ -35,7 +36,23 @@ export class PostgresLoanRepository {
       client.release();
     }
   }
-
+  async findActiveLoans(): Promise<any[]> {
+    const client = await PgConnection.getInstance().connect();
+    try {
+      const query = `
+      SELECT l.id, l.book_id, b.title as book_title, c.name as customer_name
+      FROM loans l
+      JOIN books b ON l.book_id = b.id
+      JOIN customers c ON l.customer_id = c.id
+      WHERE l.return_date IS NULL`;
+      const { rows } = await client.query(query);
+      return rows;
+    } catch (e) {
+      throw SystemException.fromUnknown(e, 'DATABASE_QUERY_ERROR');
+    } finally {
+      client.release();
+    }
+  }
   async returnBook(data: { loanId: number; bookId: number }): Promise<void> {
     const { loanId, bookId } = data;
     const client = await PgConnection.getInstance().connect();

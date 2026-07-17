@@ -1,10 +1,11 @@
 import { BookRepository } from '../../domain/repositories/book-repository.js';
 import { CreateBookDTO } from '../../domain/dto/system-dto.js';
 import { Book } from '../../domain/entities/book.js';
-export class CreateBookUseCases {
+
+export class CreateBookUseCase {
   constructor(private repo: BookRepository) {}
 
-  async execute(data: CreateBookDTO) {
+  async execute(data: CreateBookDTO): Promise<Book> {
     const book = new Book({
       id: 0, 
       title: data.title,
@@ -12,6 +13,6 @@ export class CreateBookUseCases {
       availableQuantity: data.quantity
     });
     
-    await this.repo.save(book);
+    return await this.repo.save(book);
   }
 }

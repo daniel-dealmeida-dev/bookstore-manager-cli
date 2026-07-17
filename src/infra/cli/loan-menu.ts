@@ -1,7 +1,10 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import { LoanRepository } from '../../domain/repositories/loan-repository.js';
+import { BookRepository } from '../../domain/repositories/book-repository.js';
+import { CustomerRepository } from '../../domain/repositories/customer-repository.js';
 
-export async function loanMenu(loanRepo: any, bookRepo: any, customerRepo: any) {
+export async function loanMenu(loanRepo: LoanRepository, bookRepo: BookRepository , customerRepo: CustomerRepository ) {
     const books = await bookRepo.findAll();
     const availableBooks = books.filter((b: any) => b.availableQuantity > 0);
     
