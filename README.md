@@ -263,6 +263,8 @@ Ao iniciar a aplicação, o menu principal é apresentado:
 - Paginação nas listagens, para melhor performance com grandes volumes de dados.
 - Exportação de relatórios em CSV/PDF.
 - Migração de scripts SQL manuais para uma ferramenta de migrations.
+- Melhor tratamento de erros.
+  
 
 
 
